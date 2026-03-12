@@ -12,17 +12,22 @@ const actions = [
 
 export default function QuickActions() {
   return (
-    <Card className="p-5">
-      <h3 className="text-sm font-semibold mb-4">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-2">
+    <Card className="p-6 border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 h-full flex flex-col">
+      <div className="mb-6">
+        <h3 className="text-base font-bold tracking-tight">Actions</h3>
+        <p className="text-[10px] text-muted-foreground/70 mt-1 uppercase tracking-wider">Quick Access</p>
+      </div>
+      <div className="flex-1 flex flex-col gap-3">
         {actions.map(a => (
           <Link
             key={a.label}
             to={a.path}
-            className="flex items-center gap-2.5 p-3 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors group"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all duration-200 border border-border/30 hover:border-border/50 group"
           >
-            <a.icon className={`w-4 h-4 ${a.color} group-hover:scale-110 transition-transform`} />
-            <span className="text-xs font-medium">{a.label}</span>
+            <div className={`p-2.5 rounded-xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/30 group-hover:scale-110 transition-transform duration-200`}>
+              <a.icon className={`w-5 h-5 ${a.color}`} />
+            </div>
+            <span className="text-[11px] font-semibold text-center">{a.label}</span>
           </Link>
         ))}
       </div>
