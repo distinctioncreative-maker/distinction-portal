@@ -13,6 +13,7 @@ import AppLayout from '@/components/layout/AppLayout';
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Leads from '@/pages/Leads';
+import LeadDetail from '@/pages/LeadDetail';
 import Pipeline from '@/pages/Pipeline';
 import Tasks from '@/pages/Tasks';
 import CalendarPage from '@/pages/CalendarPage';
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppLayout />}>
           <Route path="/Dashboard" element={<Dashboard />} />
           <Route path="/Leads" element={<Leads />} />
+          <Route path="/LeadDetail/:id" element={<LeadDetail />} />
           <Route path="/Pipeline" element={<Pipeline />} />
           <Route path="/Tasks" element={<Tasks />} />
           <Route path="/Calendar" element={<CalendarPage />} />
