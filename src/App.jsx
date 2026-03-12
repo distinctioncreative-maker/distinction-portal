@@ -53,6 +53,7 @@ const AuthenticatedApp = () => {
     <OrgProvider>
       <Routes>
         <Route path="/" element={<Navigate to="/Dashboard" replace />} />
+        <Route path="/InitDemo" element={<InitDemo />} />
         <Route element={<AppLayout />}>
           <Route path="/Dashboard" element={<Dashboard />} />
           <Route path="/Leads" element={<Leads />} />
