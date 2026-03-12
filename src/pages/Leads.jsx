@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Mail, Phone, Calendar, UserPlus, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const statusColors = {
   new: 'bg-blue-500/10 text-blue-500 border-blue-500/20', contacted: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
@@ -25,6 +27,7 @@ const sourceLabels = { website: 'Website', referral: 'Referral', social_media: '
 export default function Leads() {
   const { activeOrgId } = useOrg();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
@@ -38,7 +41,17 @@ export default function Leads() {
 
   const createMut = useMutation({
     mutationFn: (data) => base44.entities.Lead.create({ ...data, organizationId: activeOrgId, fullName: `${data.firstName} ${data.lastName}`.trim() }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['leads'] }); setShowCreate(false); setForm({ firstName: '', lastName: '', email: '', phone: '', source: 'website', status: 'new', valueEstimate: 0, notes: '' }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      setShowCreate(false);
+      setForm({ firstName: '', lastName: '', email: '', phone: '', source: 'website', status: 'new', valueEstimate: 0, notes: '' });
+      toast.success('Lead created successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to create lead');
+      console.error(error);
+    },
   });
 
   const filtered = leads.filter(l => {
@@ -118,7 +131,7 @@ export default function Leads() {
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground">No leads found</td></tr>
                 ) : filtered.map(lead => (
-                  <tr key={lead.id} className="border-b border-border/20 hover:bg-muted/20 transition-all duration-200 cursor-pointer group">
+                  <tr key={lead.id} onClick={() => navigate(`/LeadDetail/${lead.id}`)} className="border-b border-border/20 hover:bg-muted/20 transition-all duration-200 cursor-pointer group">
                     <td className="px-6 py-6">
                       <div className="flex items-center gap-3.5">
                         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/5">
