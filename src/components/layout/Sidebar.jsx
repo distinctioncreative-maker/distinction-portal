@@ -27,6 +27,7 @@ const navGroups = [
     items: [
       { label: 'Notifications', icon: Bell, path: '/Notifications' },
       { label: 'Organization', icon: Building2, path: '/OrgSettings', roles: ['owner', 'admin', 'superadmin'] },
+      { label: 'Billing', icon: FileText, path: '/Billing', roles: ['owner', 'admin', 'superadmin'] },
       { label: 'Profile', icon: User, path: '/Profile' },
       { label: 'Widgets', icon: ToggleLeft, path: '/WidgetPreferences' },
     ],

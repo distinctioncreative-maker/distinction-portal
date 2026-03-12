@@ -20,6 +20,7 @@ import Activity from '@/pages/Activity';
 import Notifications from '@/pages/Notifications';
 import Profile from '@/pages/Profile';
 import OrgSettings from '@/pages/OrgSettings';
+import Billing from '@/pages/Billing';
 import SupportConsole from '@/pages/SupportConsole';
 import SupportLogs from '@/pages/SupportLogs';
 import OrgManagement from '@/pages/OrgManagement';
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
           <Route path="/Notifications" element={<Notifications />} />
           <Route path="/Profile" element={<Profile />} />
           <Route path="/OrgSettings" element={<OrgSettings />} />
+          <Route path="/Billing" element={<Billing />} />
           <Route path="/SupportConsole" element={<SupportConsole />} />
           <Route path="/SupportLogs" element={<SupportLogs />} />
           <Route path="/OrgManagement" element={<OrgManagement />} />
