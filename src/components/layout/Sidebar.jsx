@@ -3,25 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useOrg } from '../OrgContext';
 import {
-  LayoutDashboard, Users, Kanban, CheckSquare, Calendar,
-  Activity, Bell, Settings, User, Shield, FileText, Building2,
-  ChevronLeft, ChevronRight, LogOut, Hexagon, ToggleLeft
+  Bell, User, Shield, FileText, Building2,
+  ChevronLeft, ChevronRight, Hexagon, ToggleLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const navGroups = [
-  {
-    label: 'Main',
-    items: [
-      { label: 'Dashboard', icon: LayoutDashboard, path: '/Dashboard' },
-      { label: 'Leads', icon: Users, path: '/Leads' },
-      { label: 'Pipeline', icon: Kanban, path: '/Pipeline' },
-      { label: 'Tasks', icon: CheckSquare, path: '/Tasks' },
-      { label: 'Calendar', icon: Calendar, path: '/Calendar' },
-      { label: 'Activity', icon: Activity, path: '/Activity' },
-    ],
-  },
   {
     label: 'Settings',
     items: [
