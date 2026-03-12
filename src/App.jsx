@@ -24,6 +24,7 @@ import SupportConsole from '@/pages/SupportConsole';
 import SupportLogs from '@/pages/SupportLogs';
 import OrgManagement from '@/pages/OrgManagement';
 import WidgetPreferences from '@/pages/WidgetPreferences';
+import InitDemo from '@/pages/InitDemo';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
