@@ -251,7 +251,7 @@ export default function Pipeline() {
                   Mark as Lost
                 </Button>
               )}
-              <Button onClick={() => createMut.mutate(form)} disabled={!form.title || !form.stageId || createMut.isPending} className="flex-1 h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
+              <Button onClick={() => createMut.mutate(form)} disabled={!form.title || !form.stageId || createMut.isPending || !activeOrgId} className="flex-1 h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
                 <TrendingUp className="w-5 h-5 mr-2" /> {editingDeal ? 'Update Deal' : 'Create Deal'}
               </Button>
             </div>

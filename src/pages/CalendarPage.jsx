@@ -268,7 +268,7 @@ export default function CalendarPage() {
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">Description</Label>
               <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Add notes..." rows={2} className="rounded-xl" />
             </div>
-            <Button onClick={() => createMut.mutate(form)} disabled={!form.title || !form.startAt || createMut.isPending} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
+            <Button onClick={() => createMut.mutate(form)} disabled={!form.title || !form.startAt || createMut.isPending || !activeOrgId} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
               <Video className="w-5 h-5 mr-2" /> {editingAppt ? 'Update Appointment' : 'Create Appointment'}
             </Button>
           </div>
