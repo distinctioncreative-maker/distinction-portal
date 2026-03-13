@@ -164,7 +164,7 @@ export default function Dashboard() {
             <RecentActivity activities={activities} />
           </div>
           <div className="lg:col-span-1">
-            <QuickActions />
+            <QuickActionsEnhanced />
           </div>
         </div>
       </div>

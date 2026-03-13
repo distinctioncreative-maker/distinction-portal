@@ -63,6 +63,8 @@ import SupportConsole from './pages/SupportConsole';
 import SupportLogs from './pages/SupportLogs';
 import Tasks from './pages/Tasks';
 import WidgetPreferences from './pages/WidgetPreferences';
+import Financials from './pages/Financials';
+import Metrics from './pages/Metrics';
 
 
 export const PAGES = {
@@ -82,6 +84,8 @@ export const PAGES = {
     "SupportLogs": SupportLogs,
     "Tasks": Tasks,
     "WidgetPreferences": WidgetPreferences,
+    "Financials": Financials,
+    "Metrics": Metrics,
 }
 
 export const pagesConfig = {

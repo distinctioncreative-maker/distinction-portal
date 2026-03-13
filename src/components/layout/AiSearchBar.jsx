@@ -27,15 +27,38 @@ export default function AiSearchBar() {
         base44.entities.Appointment.filter({ organizationId: activeOrgId }),
       ]);
 
-      // Use AI to interpret the query and find relevant results
-      const prompt = `Given this search query: "${query}"
-      
-Available data:
-- Leads: ${leads.length} records
-- Tasks: ${tasks.length} records  
-- Appointments: ${appointments.length} records
+      // Filter data based on query
+      const queryLower = query.toLowerCase();
+      const matchedLeads = leads.filter(l => 
+        l.fullName?.toLowerCase().includes(queryLower) || 
+        l.firstName?.toLowerCase().includes(queryLower) ||
+        l.lastName?.toLowerCase().includes(queryLower) ||
+        l.email?.toLowerCase().includes(queryLower)
+      );
+      const matchedTasks = tasks.filter(t => 
+        t.title?.toLowerCase().includes(queryLower) ||
+        t.description?.toLowerCase().includes(queryLower)
+      );
+      const matchedAppts = appointments.filter(a =>
+        a.title?.toLowerCase().includes(queryLower) ||
+        a.description?.toLowerCase().includes(queryLower)
+      );
 
-Interpret the user's intent and provide a helpful response. If they're looking for specific records, suggest what they might find. If they're asking a question, answer it based on the available data context.`;
+      // Use AI to interpret the query and find relevant results
+      const prompt = `You are a helpful business intelligence assistant. Analyze this search query: "${query}"
+
+Available data in the CRM:
+- Total Leads: ${leads.length} (${matchedLeads.length} matching your search)
+- Total Tasks: ${tasks.length} (${matchedTasks.length} matching your search)
+- Total Appointments: ${appointments.length} (${matchedAppts.length} matching your search)
+
+${matchedLeads.length > 0 ? `\nMatched leads: ${matchedLeads.slice(0,3).map(l => l.fullName || `${l.firstName} ${l.lastName}`).join(', ')}` : ''}
+${matchedTasks.length > 0 ? `\nMatched tasks: ${matchedTasks.slice(0,3).map(t => t.title).join(', ')}` : ''}
+
+Provide a concise, actionable response (2-3 sentences max) that:
+1. Acknowledges what was found
+2. Provides insights or next steps
+3. Uses a professional, executive tone`;
 
       const aiResponse = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -45,9 +68,9 @@ Interpret the user's intent and provide a helpful response. If they're looking f
       setResults({
         type: 'ai',
         message: aiResponse,
-        leads: leads.slice(0, 5),
-        tasks: tasks.slice(0, 5),
-        appointments: appointments.slice(0, 5),
+        leads: matchedLeads.slice(0, 5),
+        tasks: matchedTasks.slice(0, 5),
+        appointments: matchedAppts.slice(0, 5),
       });
     } catch (error) {
       setResults({
