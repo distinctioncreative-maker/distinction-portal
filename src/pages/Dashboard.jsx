@@ -7,7 +7,7 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import PipelineSummary from '@/components/dashboard/PipelineSummary';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import TasksDueWidget from '@/components/dashboard/TasksDueWidget';
-import QuickActions from '@/components/dashboard/QuickActions';
+import QuickActionsEnhanced from '@/components/dashboard/QuickActionsEnhanced';
 import { DollarSign, TrendingUp, Users, Phone, Target, BarChart3 } from 'lucide-react';
 
 export default function Dashboard() {
