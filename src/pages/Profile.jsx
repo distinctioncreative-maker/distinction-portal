@@ -23,8 +23,13 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
-    await base44.auth.updateMe({ displayName: form.displayName, phone: form.phone });
-    toast.success('Profile updated');
+    try {
+      await base44.auth.updateMe({ displayName: form.displayName, phone: form.phone });
+      toast.success('Profile updated');
+    } catch (error) {
+      toast.error('Failed to update profile');
+      console.error(error);
+    }
     setSaving(false);
   };
 

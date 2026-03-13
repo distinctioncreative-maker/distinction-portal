@@ -47,8 +47,44 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Activity from './pages/Activity';
+import Billing from './pages/Billing';
+import CalendarPage from './pages/CalendarPage';
+import Dashboard from './pages/Dashboard';
+import InitDemo from './pages/InitDemo';
+import LeadDetail from './pages/LeadDetail';
+import Leads from './pages/Leads';
+import Notifications from './pages/Notifications';
+import OrgManagement from './pages/OrgManagement';
+import OrgSettings from './pages/OrgSettings';
+import Pipeline from './pages/Pipeline';
+import Profile from './pages/Profile';
+import SupportConsole from './pages/SupportConsole';
+import SupportLogs from './pages/SupportLogs';
+import Tasks from './pages/Tasks';
+import WidgetPreferences from './pages/WidgetPreferences';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "Activity": Activity,
+    "Billing": Billing,
+    "CalendarPage": CalendarPage,
+    "Dashboard": Dashboard,
+    "InitDemo": InitDemo,
+    "LeadDetail": LeadDetail,
+    "Leads": Leads,
+    "Notifications": Notifications,
+    "OrgManagement": OrgManagement,
+    "OrgSettings": OrgSettings,
+    "Pipeline": Pipeline,
+    "Profile": Profile,
+    "SupportConsole": SupportConsole,
+    "SupportLogs": SupportLogs,
+    "Tasks": Tasks,
+    "WidgetPreferences": WidgetPreferences,
 }
 
+export const pagesConfig = {
+    mainPage: "Dashboard",
+    Pages: PAGES,
+};

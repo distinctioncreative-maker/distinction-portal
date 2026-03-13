@@ -37,8 +37,12 @@ export default function OrgSettings() {
   }, [organization]);
 
   const saveOrgMut = useMutation({
-    mutationFn: () => base44.entities.Organization.update(organization.id, orgForm),
+    mutationFn: () => {
+      if (!organization?.id) throw new Error('No organization found');
+      return base44.entities.Organization.update(organization.id, orgForm);
+    },
     onSuccess: (data) => { setOrganization({ ...organization, ...orgForm }); toast.success('Organization updated'); },
+    onError: (error) => { toast.error('Failed to update organization'); console.error(error); },
   });
 
   const toggleMut = useMutation({
@@ -77,8 +81,8 @@ export default function OrgSettings() {
             <div><Label className="text-xs">Business Type</Label><Input value={orgForm.businessType} onChange={e => setOrgForm({ ...orgForm, businessType: e.target.value })} /></div>
             <div><Label className="text-xs">Timezone</Label><Input value={orgForm.timezone} onChange={e => setOrgForm({ ...orgForm, timezone: e.target.value })} /></div>
           </div>
-          <Button onClick={() => saveOrgMut.mutate()} disabled={saveOrgMut.isPending} size="sm">
-            <Save className="w-4 h-4 mr-1.5" /> Save
+          <Button onClick={() => saveOrgMut.mutate()} disabled={saveOrgMut.isPending || !organization} size="sm">
+            <Save className="w-4 h-4 mr-1.5" /> {saveOrgMut.isPending ? 'Saving...' : 'Save'}
           </Button>
         </CardContent>
       </Card>
