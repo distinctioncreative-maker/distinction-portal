@@ -237,7 +237,7 @@ export default function Leads() {
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">Notes</Label>
               <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="rounded-xl" />
             </div>
-            <Button onClick={() => createMut.mutate(form)} disabled={!form.firstName || createMut.isPending} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
+            <Button onClick={() => createMut.mutate(form)} disabled={!form.firstName || createMut.isPending || !activeOrgId} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
               <UserPlus className="w-5 h-5 mr-2" /> Create Lead
             </Button>
           </div>

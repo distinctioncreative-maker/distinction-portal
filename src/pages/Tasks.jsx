@@ -246,7 +246,7 @@ export default function Tasks() {
                 <Input type="datetime-local" value={form.dueAt} onChange={e => setForm({ ...form, dueAt: e.target.value })} className="h-11 rounded-xl" />
               </div>
             </div>
-            <Button onClick={() => createMut.mutate(form)} disabled={!form.title || createMut.isPending} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
+            <Button onClick={() => createMut.mutate(form)} disabled={!form.title || createMut.isPending || !activeOrgId} className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
               <CheckSquare className="w-5 h-5 mr-2" /> {editingTask ? 'Update Task' : 'Create Task'}
             </Button>
           </div>
