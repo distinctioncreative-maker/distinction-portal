@@ -14,11 +14,22 @@ export function OrgProvider({ children }) {
     async function loadOrg() {
       if (!user) { setIsLoading(false); return; }
       
-      const orgId = user.organizationId;
-      if (orgId) {
+      let orgId = user.organizationId;
+      
+      // Fallback: if user doesn't have organizationId, try to find and assign first org
+      if (!orgId) {
+        const orgs = await base44.entities.Organization.list(null, 1);
+        if (orgs.length > 0) {
+          orgId = orgs[0].id;
+          // Update user with organizationId in background
+          base44.auth.updateMe({ organizationId: orgId }).catch(console.error);
+          setOrganization(orgs[0]);
+        }
+      } else {
         const orgs = await base44.entities.Organization.filter({ id: orgId });
         if (orgs.length > 0) setOrganization(orgs[0]);
       }
+      
       setIsLoading(false);
     }
     loadOrg();
