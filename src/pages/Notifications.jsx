@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
@@ -23,6 +24,7 @@ const typeConfig = {
 export default function Notifications() {
   const { activeOrgId } = useOrg();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
 
   const { data: notifications } = useQuery({
@@ -45,6 +47,21 @@ export default function Notifications() {
   });
 
   const unreadCount = notifications.filter(n => n.status === 'unread').length;
+
+  const handleNotificationClick = (notification) => {
+    if (notification.status === 'unread') {
+      markReadMut.mutate(notification.id);
+    }
+    
+    // Navigate based on notification type
+    if (notification.type === 'task') {
+      navigate('/Tasks');
+    } else if (notification.type === 'lead') {
+      navigate('/Leads');
+    } else if (notification.type === 'appointment') {
+      navigate('/CalendarPage');
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6 animate-fade-in">
@@ -70,8 +87,8 @@ export default function Notifications() {
           return (
             <Card
               key={n.id}
-              className={`p-4 flex items-start gap-3 transition-colors cursor-pointer hover:shadow-sm ${n.status === 'unread' ? 'bg-accent/5 border-accent/20' : ''}`}
-              onClick={() => n.status === 'unread' && markReadMut.mutate(n.id)}
+              className={`p-4 flex items-start gap-3 transition-all cursor-pointer hover:shadow-lg hover:shadow-accent/5 hover:bg-muted/30 ${n.status === 'unread' ? 'bg-accent/5 border-accent/20' : ''}`}
+              onClick={() => handleNotificationClick(n)}
             >
               <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${cfg.color}`} />
               <div className="flex-1 min-w-0">

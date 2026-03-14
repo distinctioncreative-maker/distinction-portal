@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Mail, Phone, DollarSign, Calendar, CheckSquare, Activity as ActivityIcon, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import ClientNoteFeed from '@/components/lead/ClientNoteFeed';
 
 const statusColors = {
   new: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
@@ -144,8 +145,10 @@ export default function LeadDetail() {
       {/* Content */}
       <div className="px-8 py-8 max-w-[90rem] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Contact Info */}
-          <Card className="p-6 border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl">
+          {/* Left Column: Contact Info & Notes */}
+          <div className="space-y-6">
+            {/* Contact Info */}
+            <Card className="p-6 border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl">
             <h3 className="text-base font-bold mb-6">Contact Information</h3>
             <div className="space-y-4">
               {lead.email && (
@@ -189,6 +192,10 @@ export default function LeadDetail() {
               )}
             </div>
           </Card>
+
+          {/* Client Notes Feed */}
+          <ClientNoteFeed leadId={id} />
+          </div>
 
           {/* Activity Tabs */}
           <Card className="lg:col-span-2 border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl">

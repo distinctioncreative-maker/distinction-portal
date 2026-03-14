@@ -51,9 +51,11 @@ import Activity from './pages/Activity';
 import Billing from './pages/Billing';
 import CalendarPage from './pages/CalendarPage';
 import Dashboard from './pages/Dashboard';
+import Financials from './pages/Financials';
 import InitDemo from './pages/InitDemo';
 import LeadDetail from './pages/LeadDetail';
 import Leads from './pages/Leads';
+import Metrics from './pages/Metrics';
 import Notifications from './pages/Notifications';
 import OrgManagement from './pages/OrgManagement';
 import OrgSettings from './pages/OrgSettings';
@@ -63,8 +65,6 @@ import SupportConsole from './pages/SupportConsole';
 import SupportLogs from './pages/SupportLogs';
 import Tasks from './pages/Tasks';
 import WidgetPreferences from './pages/WidgetPreferences';
-import Financials from './pages/Financials';
-import Metrics from './pages/Metrics';
 
 
 export const PAGES = {
@@ -72,9 +72,11 @@ export const PAGES = {
     "Billing": Billing,
     "CalendarPage": CalendarPage,
     "Dashboard": Dashboard,
+    "Financials": Financials,
     "InitDemo": InitDemo,
     "LeadDetail": LeadDetail,
     "Leads": Leads,
+    "Metrics": Metrics,
     "Notifications": Notifications,
     "OrgManagement": OrgManagement,
     "OrgSettings": OrgSettings,
@@ -84,8 +86,6 @@ export const PAGES = {
     "SupportLogs": SupportLogs,
     "Tasks": Tasks,
     "WidgetPreferences": WidgetPreferences,
-    "Financials": Financials,
-    "Metrics": Metrics,
 }
 
 export const pagesConfig = {
