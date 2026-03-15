@@ -27,6 +27,9 @@ import SupportLogs from '@/pages/SupportLogs';
 import OrgManagement from '@/pages/OrgManagement';
 import WidgetPreferences from '@/pages/WidgetPreferences';
 import InitDemo from '@/pages/InitDemo';
+import Financials from '@/pages/Financials';
+import Metrics from '@/pages/Metrics';
+import TaskDetail from '@/pages/TaskDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -63,6 +66,10 @@ const AuthenticatedApp = () => {
           <Route path="/Pipeline" element={<Pipeline />} />
           <Route path="/Tasks" element={<Tasks />} />
           <Route path="/Calendar" element={<CalendarPage />} />
+          <Route path="/CalendarPage" element={<CalendarPage />} />
+          <Route path="/Financials" element={<Financials />} />
+          <Route path="/Metrics" element={<Metrics />} />
+          <Route path="/TaskDetail/:id" element={<TaskDetail />} />
           <Route path="/Activity" element={<Activity />} />
           <Route path="/Notifications" element={<Notifications />} />
           <Route path="/Profile" element={<Profile />} />

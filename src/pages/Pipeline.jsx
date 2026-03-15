@@ -11,15 +11,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, DollarSign, Clock, User, TrendingUp, Kanban, ArrowRight } from 'lucide-react';
+import { Plus, DollarSign, Clock, User, TrendingUp, Kanban, ArrowRight, Settings2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import StageManager from '@/components/pipeline/StageManager';
 
 export default function Pipeline() {
   const { activeOrgId } = useOrg();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [showStageManager, setShowStageManager] = useState(false);
   const [editingDeal, setEditingDeal] = useState(null);
   const [form, setForm] = useState({ title: '', value: 0, probability: 50, stageId: '', nextAction: '', ownerUserId: '' });
 
@@ -112,9 +114,14 @@ export default function Pipeline() {
                 </div>
               </div>
             </div>
-            <Button onClick={() => { setEditingDeal(null); setShowCreate(true); }} size="lg" className="rounded-xl px-6 shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
-              <Plus className="w-5 h-5 mr-2" /> New Deal
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={() => setShowStageManager(true)} variant="outline" size="lg" className="rounded-xl px-5">
+                <Settings2 className="w-4 h-4 mr-2" /> Manage Stages
+              </Button>
+              <Button onClick={() => { setEditingDeal(null); setShowCreate(true); }} size="lg" className="rounded-xl px-6 shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300">
+                <Plus className="w-5 h-5 mr-2" /> New Deal
+              </Button>
+            </div>
           </div>
 
           {/* Summary Stats */}
@@ -211,6 +218,8 @@ export default function Pipeline() {
           )}
         </div>
       </div>
+
+      <StageManager stages={stages} open={showStageManager} onOpenChange={setShowStageManager} />
 
       {/* Premium Create/Edit Dialog */}
       <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open) setEditingDeal(null); }}>

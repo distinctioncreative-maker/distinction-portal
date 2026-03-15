@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, AlertCircle } from 'lucide-react';
+import { CheckSquare, AlertCircle, ChevronRight } from 'lucide-react';
 import { format, isToday, isPast } from 'date-fns';
 
 const priorityStyles = {
@@ -12,6 +13,7 @@ const priorityStyles = {
 };
 
 export default function TasksDueWidget({ tasks }) {
+  const navigate = useNavigate();
   const dueTasks = (tasks || [])
     .filter(t => t.status !== 'completed' && t.status !== 'cancelled' && t.dueAt)
     .sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt))
@@ -38,7 +40,7 @@ export default function TasksDueWidget({ tasks }) {
         {dueTasks.map(t => {
           const overdue = t.dueAt && isPast(new Date(t.dueAt)) && !isToday(new Date(t.dueAt));
           return (
-            <div key={t.id} className="group flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all duration-200 border border-border/30 hover:border-border/50">
+            <div key={t.id} onClick={() => navigate(`/TaskDetail/${t.id}`)} className="group flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all duration-200 border border-border/30 hover:border-border/50 cursor-pointer hover:shadow-lg hover:shadow-accent/5">
               {overdue ? (
                 <div className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
                   <AlertCircle className="w-3.5 h-3.5 text-red-400" />
@@ -57,6 +59,7 @@ export default function TasksDueWidget({ tasks }) {
               <Badge variant="outline" className={`text-[10px] px-2.5 py-1 ${priorityStyles[t.priority] || ''}`}>
                 {t.priority}
               </Badge>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors flex-shrink-0" />
             </div>
           );
         })}
