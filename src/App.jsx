@@ -27,6 +27,7 @@ import SupportLogs from '@/pages/SupportLogs';
 import OrgManagement from '@/pages/OrgManagement';
 import WidgetPreferences from '@/pages/WidgetPreferences';
 import InitDemo from '@/pages/InitDemo';
+import Login from '@/pages/Login';
 import Financials from '@/pages/Financials';
 import Metrics from '@/pages/Metrics';
 import TaskDetail from '@/pages/TaskDetail';
@@ -91,7 +92,10 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<AuthenticatedApp />} />
+          </Routes>
         </Router>
         <Toaster />
       </QueryClientProvider>
