@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare, Calendar, Activity,
   Settings, ChevronLeft, ChevronRight, Shield, HelpCircle, DollarSign,
@@ -58,7 +57,7 @@ const navGroups = [
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isInternal, userRole, isSupportMode, supportMode, exitSupportMode, organization } = useOrg();
   const [collapsed, setCollapsed] = useState(false);
   const initials = (user?.full_name || user?.email || '??').slice(0, 2).toUpperCase();
@@ -208,7 +207,7 @@ export default function Sidebar() {
                   <User className="w-4 h-4 mr-2" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => base44.auth.logout()} className="rounded-lg text-destructive">
+                <DropdownMenuItem onClick={logout} className="rounded-lg text-destructive">
                   <LogOut className="w-4 h-4 mr-2" /> Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
