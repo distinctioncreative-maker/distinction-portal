@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const OrgContext = createContext(null);
 
 export function OrgProvider({ children }) {
-  const { user } = useAuth();
+  const { user, updateCurrentUser } = useAuth();
   const [organization, setOrganization] = useState(null);
   const [supportMode, setSupportMode] = useState(null); // { sessionId, orgId, orgName, reason }
   const [isLoading, setIsLoading] = useState(true);
@@ -13,53 +13,51 @@ export function OrgProvider({ children }) {
   useEffect(() => {
     async function loadOrg() {
       if (!user) { setIsLoading(false); return; }
-      
+
       let orgId = user.organizationId;
-      
-      // Fallback: if user doesn't have organizationId, try to find and assign first org
+
       if (!orgId) {
-        const orgs = await base44.entities.Organization.list(null, 1);
-        if (orgs.length > 0) {
+        // Fallback: assign user to the first available org.
+        const { data: orgs } = await supabase
+          .from('organizations')
+          .select('*')
+          .limit(1);
+
+        if (orgs?.length > 0) {
           orgId = orgs[0].id;
-          // Update user with organizationId in background
-          base44.auth.updateMe({ organizationId: orgId }).catch(console.error);
           setOrganization(orgs[0]);
+          // Persist orgId onto the user so it survives refresh.
+          updateCurrentUser({ organizationId: orgId }).catch(console.error);
         }
       } else {
-        const orgs = await base44.entities.Organization.filter({ id: orgId });
-        if (orgs.length > 0) setOrganization(orgs[0]);
+        const { data: orgs } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', orgId)
+          .limit(1);
+
+        if (orgs?.length > 0) setOrganization(orgs[0]);
       }
-      
+
       setIsLoading(false);
     }
+
     loadOrg();
-  }, [user]);
+  }, [user?.id]);
 
   const activeOrgId = supportMode?.orgId || organization?.id;
   const isSupportMode = !!supportMode;
-  const userRole = user?.role || 'staff';
+  const userRole = user?.role || 'user';
   const isInternal = userRole === 'superadmin' || userRole === 'support';
 
+  // Phase 4: wire to real SupportSession table once entity API is live.
   const enterSupportMode = async (orgId, orgName, reason) => {
-    const session = await base44.entities.SupportSession.create({
-      organizationId: orgId,
-      supportUserId: user?.id,
-      enteredAt: new Date().toISOString(),
-      accessReason: reason,
-      mode: 'standard',
-      status: 'active',
-    });
-    setSupportMode({ sessionId: session.id, orgId, orgName, reason });
-    return session;
+    const fakeSession = { id: `support-${Date.now()}` };
+    setSupportMode({ sessionId: fakeSession.id, orgId, orgName, reason });
+    return fakeSession;
   };
 
   const exitSupportMode = async () => {
-    if (supportMode?.sessionId) {
-      await base44.entities.SupportSession.update(supportMode.sessionId, {
-        exitedAt: new Date().toISOString(),
-        status: 'ended',
-      });
-    }
     setSupportMode(null);
   };
 

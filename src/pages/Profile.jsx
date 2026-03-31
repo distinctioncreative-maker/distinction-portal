@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Save, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateCurrentUser } = useAuth();
   const [form, setForm] = useState({ displayName: '', phone: '' });
   const [saving, setSaving] = useState(false);
 
@@ -24,7 +23,7 @@ export default function Profile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({ displayName: form.displayName, phone: form.phone });
+      await updateCurrentUser({ full_name: form.displayName, phone: form.phone });
       toast.success('Profile updated');
     } catch (error) {
       toast.error('Failed to update profile');

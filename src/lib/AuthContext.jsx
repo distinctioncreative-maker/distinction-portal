@@ -70,6 +70,14 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/login';
   };
 
+  // Update Supabase user_metadata and refresh local user state.
+  const updateCurrentUser = async (metadata) => {
+    const { data, error } = await supabase.auth.updateUser({ data: metadata });
+    if (error) throw error;
+    if (data?.user) setUser(normalizeUser(data.user));
+    return data;
+  };
+
   // Kept for interface compatibility — no-op until Phase 3.
   const checkAppState = async () => {};
 
@@ -85,6 +93,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       navigateToLogin,
       checkAppState,
+      updateCurrentUser,
     }}>
       {children}
     </AuthContext.Provider>
