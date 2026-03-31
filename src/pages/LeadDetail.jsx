@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { leadsApi } from '@/api/leads';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -38,10 +38,7 @@ export default function LeadDetail() {
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
-    queryFn: async () => {
-      const leads = await base44.entities.Lead.filter({ id, organizationId: activeOrgId });
-      return leads[0] || null;
-    },
+    queryFn: async () => activeOrgId ? leadsApi.get(id, activeOrgId) : null,
   });
 
   const { data: tasks } = useQuery({
@@ -63,7 +60,7 @@ export default function LeadDetail() {
   });
 
   const updateMut = useMutation({
-    mutationFn: (data) => base44.entities.Lead.update(id, data),
+    mutationFn: (data) => leadsApi.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['lead', id] });
       qc.invalidateQueries({ queryKey: ['leads'] });
@@ -74,7 +71,7 @@ export default function LeadDetail() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: () => base44.entities.Lead.update(id, { status: 'archived' }),
+    mutationFn: () => leadsApi.update(id, { status: 'archived' }),
     onSuccess: () => {
       toast.success('Lead archived');
       navigate('/Leads');

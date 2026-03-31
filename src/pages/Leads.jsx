@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { leadsApi } from '@/api/leads';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -35,12 +35,12 @@ export default function Leads() {
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['leads', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Lead.filter({ organizationId: activeOrgId }, '-created_date', 200) : [],
+    queryFn: () => activeOrgId ? leadsApi.list(activeOrgId) : [],
     initialData: [],
   });
 
   const createMut = useMutation({
-    mutationFn: (data) => base44.entities.Lead.create({ ...data, organizationId: activeOrgId, fullName: `${data.firstName} ${data.lastName}`.trim() }),
+    mutationFn: (data) => leadsApi.create({ ...data, organizationId: activeOrgId, fullName: `${data.firstName} ${data.lastName}`.trim() }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['leads'] });
       qc.invalidateQueries({ queryKey: ['activities'] });
