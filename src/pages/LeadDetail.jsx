@@ -37,8 +37,9 @@ export default function LeadDetail() {
   const [form, setForm] = useState({});
 
   const { data: lead, isLoading } = useQuery({
-    queryKey: ['lead', id],
-    queryFn: async () => activeOrgId ? leadsApi.get(id, activeOrgId) : null,
+    queryKey: ['lead', id, activeOrgId],
+    queryFn: async () => leadsApi.get(id, activeOrgId),
+    enabled: !!activeOrgId,
   });
 
   const { data: tasks } = useQuery({
