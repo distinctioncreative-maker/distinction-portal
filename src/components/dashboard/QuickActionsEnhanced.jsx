@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { UserPlus, ListPlus, CalendarPlus, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { tasksApi } from '@/api/tasks';
 import { useOrg } from '../OrgContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -28,7 +29,7 @@ export default function QuickActionsEnhanced() {
 
   const { data: tasks } = useQuery({
     queryKey: ['tasks', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Task.filter({ organizationId: activeOrgId, status: 'todo' }, '-created_date', 5) : [],
+    queryFn: () => activeOrgId ? tasksApi.list(activeOrgId, { status: 'todo' }) : [],
     initialData: [],
   });
 

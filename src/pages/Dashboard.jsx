@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { tasksApi } from '@/api/tasks';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -28,7 +29,7 @@ export default function Dashboard() {
 
   const { data: tasks } = useQuery({
     queryKey: ['tasks', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Task.filter({ organizationId: activeOrgId }, '-created_date', 50) : [],
+    queryFn: () => activeOrgId ? tasksApi.list(activeOrgId) : [],
     initialData: [],
   });
 

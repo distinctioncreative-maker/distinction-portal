@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { leadsApi } from '@/api/leads';
+import { tasksApi } from '@/api/tasks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -43,8 +44,9 @@ export default function LeadDetail() {
   });
 
   const { data: tasks } = useQuery({
-    queryKey: ['leadTasks', id],
-    queryFn: () => base44.entities.Task.filter({ relatedLeadId: id, organizationId: activeOrgId }, '-created_date'),
+    queryKey: ['leadTasks', id, activeOrgId],
+    queryFn: () => tasksApi.list(activeOrgId, { relatedLeadId: id }),
+    enabled: !!activeOrgId,
     initialData: [],
   });
 

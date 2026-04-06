@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { tasksApi } from '@/api/tasks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -35,7 +35,7 @@ export default function Tasks() {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Task.filter({ organizationId: activeOrgId }, '-created_date', 200) : [],
+    queryFn: () => activeOrgId ? tasksApi.list(activeOrgId) : [],
     initialData: [],
   });
 
@@ -49,8 +49,8 @@ export default function Tasks() {
         dueAt: data.dueAt ? new Date(data.dueAt).toISOString() : null,
       };
       return editingTask
-        ? base44.entities.Task.update(editingTask.id, payload)
-        : base44.entities.Task.create(payload);
+        ? tasksApi.update(editingTask.id, payload)
+        : tasksApi.create(payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
@@ -66,9 +66,8 @@ export default function Tasks() {
   });
 
   const toggleMut = useMutation({
-    mutationFn: (task) => base44.entities.Task.update(task.id, {
+    mutationFn: (task) => tasksApi.update(task.id, {
       status: task.status === 'completed' ? 'todo' : 'completed',
-      completedAt: task.status === 'completed' ? null : new Date().toISOString(),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
@@ -77,7 +76,7 @@ export default function Tasks() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.Task.update(id, { status: 'cancelled' }),
+    mutationFn: (id) => tasksApi.update(id, { status: 'cancelled' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       toast.success('Task cancelled');

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { tasksApi } from '@/api/tasks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -37,15 +37,13 @@ export default function TaskDetail() {
   const [form, setForm] = useState({});
 
   const { data: task, isLoading } = useQuery({
-    queryKey: ['task', id],
-    queryFn: async () => {
-      const tasks = await base44.entities.Task.filter({ id, organizationId: activeOrgId });
-      return tasks[0] || null;
-    },
+    queryKey: ['task', id, activeOrgId],
+    queryFn: () => tasksApi.get(id, activeOrgId),
+    enabled: !!activeOrgId,
   });
 
   const updateMut = useMutation({
-    mutationFn: (data) => base44.entities.Task.update(id, data),
+    mutationFn: (data) => tasksApi.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['task', id] });
       qc.invalidateQueries({ queryKey: ['tasks'] });
