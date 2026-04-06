@@ -13,7 +13,8 @@ function toDb(data) {
   };
   const result = {};
   for (const [k, v] of Object.entries(data)) {
-    result[fieldMap[k] ?? k] = v;
+    const dbKey = fieldMap[k] ?? k;
+    result[dbKey] = v === '' ? null : v;
   }
   return result;
 }

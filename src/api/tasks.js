@@ -10,7 +10,9 @@ function toDb(data) {
   };
   const result = {};
   for (const [k, v] of Object.entries(data)) {
-    result[fieldMap[k] ?? k] = v;
+    // Coerce empty strings to null for uuid/timestamptz columns to avoid Postgres type errors.
+    const dbKey = fieldMap[k] ?? k;
+    result[dbKey] = v === '' ? null : v;
   }
   return result;
 }
