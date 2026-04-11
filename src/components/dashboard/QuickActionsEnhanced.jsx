@@ -3,7 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { UserPlus, ListPlus, CalendarPlus, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { leadsApi } from '@/api/leads';
+import { appointmentsApi } from '@/api/appointments';
 import { tasksApi } from '@/api/tasks';
 import { useOrg } from '../OrgContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,7 +24,7 @@ export default function QuickActionsEnhanced() {
 
   const { data: leads } = useQuery({
     queryKey: ['leads', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Lead.filter({ organizationId: activeOrgId }, '-created_date', 5) : [],
+    queryFn: () => activeOrgId ? leadsApi.list(activeOrgId) : [],
     initialData: [],
   });
 
@@ -35,7 +36,7 @@ export default function QuickActionsEnhanced() {
 
   const { data: appointments } = useQuery({
     queryKey: ['appointments', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Appointment.filter({ organizationId: activeOrgId, status: 'scheduled' }, '-startAt', 5) : [],
+    queryFn: () => activeOrgId ? appointmentsApi.list(activeOrgId, 5) : [],
     initialData: [],
   });
 

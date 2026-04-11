@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Search, Sparkles, Loader2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { leadsApi } from '@/api/leads';
+import { tasksApi } from '@/api/tasks';
+import { appointmentsApi } from '@/api/appointments';
 import { useOrg } from '../OrgContext';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,9 +25,9 @@ export default function AiSearchBar() {
     try {
       // First, try to search entities
       const [leads, tasks, appointments] = await Promise.all([
-        base44.entities.Lead.filter({ organizationId: activeOrgId }),
-        base44.entities.Task.filter({ organizationId: activeOrgId }),
-        base44.entities.Appointment.filter({ organizationId: activeOrgId }),
+        leadsApi.list(activeOrgId),
+        tasksApi.list(activeOrgId),
+        appointmentsApi.list(activeOrgId),
       ]);
 
       // Filter data based on query

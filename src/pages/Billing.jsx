@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { billingApi } from '@/api/billing';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,18 +23,12 @@ export default function Billing() {
 
   const { data: billingPackage } = useQuery({
     queryKey: ['billing', activeOrgId],
-    queryFn: async () => {
-      if (!activeOrgId) return null;
-      const pkg = await base44.entities.BillingPackage.filter({ organizationId: activeOrgId });
-      return pkg[0] || null;
-    },
+    queryFn: () => activeOrgId ? billingApi.get(activeOrgId) : null,
+    enabled: !!activeOrgId,
   });
 
   const saveMut = useMutation({
-    mutationFn: (data) => {
-      if (billingPackage) return base44.entities.BillingPackage.update(billingPackage.id, data);
-      return base44.entities.BillingPackage.create({ ...data, organizationId: activeOrgId });
-    },
+    mutationFn: (data) => billingApi.upsert(activeOrgId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['billing'] });
       setShowEdit(false);
