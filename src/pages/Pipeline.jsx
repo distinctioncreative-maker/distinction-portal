@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { pipelineApi } from '@/api/pipeline';
+import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -22,18 +23,19 @@ export default function Pipeline() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [showStageManager, setShowStageManager] = useState(false);
+  const [showLost, setShowLost] = useState(false);
   const [editingDeal, setEditingDeal] = useState(null);
   const [form, setForm] = useState({ title: '', value: 0, probability: 50, stageId: '', nextAction: '', ownerUserId: '' });
 
   const { data: stages } = useQuery({
     queryKey: ['stages', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.PipelineStage.filter({ organizationId: activeOrgId }, 'order') : [],
+    queryFn: () => activeOrgId ? pipelineApi.stages.list(activeOrgId) : [],
     initialData: [],
   });
 
   const { data: items } = useQuery({
     queryKey: ['pipelineItems', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.PipelineItem.filter({ organizationId: activeOrgId }) : [],
+    queryFn: () => activeOrgId ? pipelineApi.items.list(activeOrgId) : [],
     initialData: [],
   });
 
@@ -46,15 +48,21 @@ export default function Pipeline() {
         ownerUserId: data.ownerUserId || user?.id,
       };
       return editingDeal
-        ? base44.entities.PipelineItem.update(editingDeal.id, payload)
-        : base44.entities.PipelineItem.create(payload);
+        ? pipelineApi.items.update(editingDeal.id, payload)
+        : pipelineApi.items.create(payload);
     },
-    onSuccess: () => {
+    onSuccess: (result, data) => {
       qc.invalidateQueries({ queryKey: ['pipelineItems'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       setShowCreate(false);
       setEditingDeal(null);
       setForm({ title: '', value: 0, probability: 50, stageId: '', nextAction: '', ownerUserId: '' });
       toast.success(editingDeal ? 'Deal updated' : 'Deal created');
+      if (!editingDeal) {
+        logActivity({ orgId: activeOrgId, entityType: 'deal', entityId: result?.id, action: 'created', description: `Deal "${data.title}" created`, userId: user?.id, userEmail: user?.email });
+      } else {
+        logActivity({ orgId: activeOrgId, entityType: 'deal', entityId: editingDeal.id, action: 'updated', description: `Deal "${data.title}" updated`, userId: user?.id, userEmail: user?.email });
+      }
     },
     onError: (error) => {
       toast.error('Failed to save deal');
@@ -63,23 +71,33 @@ export default function Pipeline() {
   });
 
   const moveMut = useMutation({
-    mutationFn: ({ id, stageId }) => base44.entities.PipelineItem.update(id, { stageId }),
-    onSuccess: () => {
+    mutationFn: ({ id, stageId }) => pipelineApi.items.update(id, { stageId }),
+    onSuccess: (_, { id, stageId }) => {
       qc.invalidateQueries({ queryKey: ['pipelineItems'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Deal moved');
+      const deal = items.find(i => i.id === id);
+      const stage = stages.find(s => s.id === stageId);
+      if (deal && stage) {
+        logActivity({ orgId: activeOrgId, entityType: 'deal', entityId: id, action: 'status_changed', description: `Deal "${deal.title}" moved to ${stage.name}`, userId: user?.id, userEmail: user?.email });
+      }
     },
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.PipelineItem.update(id, { status: 'lost' }),
-    onSuccess: () => {
+    mutationFn: (id) => pipelineApi.items.update(id, { status: 'lost' }),
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['pipelineItems'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Deal marked as lost');
+      const deal = items.find(i => i.id === id);
+      if (deal) logActivity({ orgId: activeOrgId, entityType: 'deal', entityId: id, action: 'status_changed', description: `Deal "${deal.title}" marked as lost`, userId: user?.id, userEmail: user?.email });
     },
   });
 
   const sortedStages = [...stages].sort((a, b) => a.order - b.order);
   const activeItems = items.filter(i => i.status === 'active');
+  const lostItems = items.filter(i => i.status === 'lost');
   const totalValue = activeItems.reduce((s, i) => s + (i.value || 0), 0);
 
   const handleEdit = (deal) => {
@@ -218,6 +236,54 @@ export default function Pipeline() {
           )}
         </div>
       </div>
+
+      {/* Lost Deals Section */}
+      {lostItems.length > 0 && (
+        <div className="px-8 pb-8 max-w-[120rem] mx-auto">
+          <button
+            onClick={() => setShowLost(v => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <span>{showLost ? '▾' : '▸'}</span>
+            Lost Deals ({lostItems.length})
+          </button>
+          {showLost && (
+            <div className="rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-muted/20 border-b border-border/30">
+                    <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Deal</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Stage</th>
+                    <th className="px-6 py-3 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Value</th>
+                    <th className="px-6 py-3 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lostItems.map(item => (
+                    <tr key={item.id} className="border-b border-border/20 last:border-0">
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{item.title}</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{sortedStages.find(s => s.id === item.stageId)?.name || '—'}</td>
+                      <td className="px-6 py-4 text-sm text-right text-muted-foreground">${(item.value || 0).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => pipelineApi.items.update(item.id, { status: 'active' }).then(() => {
+                            qc.invalidateQueries({ queryKey: ['pipelineItems'] });
+                            qc.invalidateQueries({ queryKey: ['activities'] });
+                            logActivity({ orgId: activeOrgId, entityType: 'deal', entityId: item.id, action: 'updated', description: `Deal "${item.title}" restored to active`, userId: user?.id, userEmail: user?.email });
+                          })}
+                          className="text-xs text-accent hover:underline"
+                        >
+                          Restore
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <StageManager stages={stages} open={showStageManager} onOpenChange={setShowStageManager} />
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { activityLogApi } from '@/api/activityLog';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export default function Activity() {
 
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.ActivityLog.filter({ organizationId: activeOrgId }, '-created_date', 100) : [],
+    queryFn: () => activeOrgId ? activityLogApi.listForOrg(activeOrgId, 100) : [],
     initialData: [],
   });
 

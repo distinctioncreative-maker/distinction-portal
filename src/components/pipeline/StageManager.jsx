@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { pipelineApi } from '@/api/pipeline';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export default function StageManager({ stages, open, onOpenChange }) {
   const [editingStage, setEditingStage] = useState(null);
 
   const createMut = useMutation({
-    mutationFn: () => base44.entities.PipelineStage.create({
+    mutationFn: () => pipelineApi.stages.create({
       organizationId: activeOrgId,
       name: newName,
       color: newColor,
@@ -37,7 +37,7 @@ export default function StageManager({ stages, open, onOpenChange }) {
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.PipelineStage.update(id, data),
+    mutationFn: ({ id, data }) => pipelineApi.stages.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stages'] });
       setEditingStage(null);
@@ -46,7 +46,7 @@ export default function StageManager({ stages, open, onOpenChange }) {
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.PipelineStage.delete(id),
+    mutationFn: (id) => pipelineApi.stages.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stages'] });
       toast.success('Stage deleted');
@@ -60,8 +60,8 @@ export default function StageManager({ stages, open, onOpenChange }) {
     if (swapIdx < 0 || swapIdx >= sorted.length) return;
     const swapStage = sorted[swapIdx];
     Promise.all([
-      base44.entities.PipelineStage.update(stage.id, { order: swapStage.order }),
-      base44.entities.PipelineStage.update(swapStage.id, { order: stage.order }),
+      pipelineApi.stages.update(stage.id, { order: swapStage.order }),
+      pipelineApi.stages.update(swapStage.id, { order: stage.order }),
     ]).then(() => qc.invalidateQueries({ queryKey: ['stages'] }));
   };
 

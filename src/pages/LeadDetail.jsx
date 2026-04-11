@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { leadsApi } from '@/api/leads';
 import { tasksApi } from '@/api/tasks';
+import { activityLogApi } from '@/api/activityLog';
+import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -14,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Mail, Phone, DollarSign, Calendar, CheckSquare, Activity as ActivityIcon, Edit2, Trash2 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import ClientNoteFeed from '@/components/lead/ClientNoteFeed';
@@ -33,6 +36,7 @@ export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { activeOrgId } = useOrg();
+  const { user } = useAuth();
   const qc = useQueryClient();
   const [showEdit, setShowEdit] = useState(false);
   const [form, setForm] = useState({});
@@ -52,23 +56,32 @@ export default function LeadDetail() {
 
   const { data: appointments } = useQuery({
     queryKey: ['leadAppointments', id],
-    queryFn: () => base44.entities.Appointment.filter({ leadId: id, organizationId: activeOrgId }, '-startAt'),
+    queryFn: () => [],
     initialData: [],
   });
 
   const { data: activities } = useQuery({
-    queryKey: ['leadActivities', id],
-    queryFn: () => base44.entities.ActivityLog.filter({ entityId: id, organizationId: activeOrgId }, '-created_date', 50),
+    queryKey: ['leadActivities', id, activeOrgId],
+    queryFn: () => activeOrgId ? activityLogApi.listForEntity(id, activeOrgId, 50) : [],
+    enabled: !!activeOrgId,
     initialData: [],
   });
 
   const updateMut = useMutation({
     mutationFn: (data) => leadsApi.update(id, data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
       qc.invalidateQueries({ queryKey: ['lead', id] });
       qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['leadActivities', id] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       setShowEdit(false);
       toast.success('Lead updated');
+      const name = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+      const action = data.status && lead?.status !== data.status ? 'status_changed' : 'updated';
+      const description = action === 'status_changed'
+        ? `Lead ${name} status changed to ${data.status}`
+        : `Lead ${name} updated`;
+      logActivity({ orgId: activeOrgId, entityType: 'lead', entityId: id, action, description, userId: user?.id, userEmail: user?.email });
     },
     onError: () => toast.error('Failed to update lead'),
   });
@@ -76,7 +89,9 @@ export default function LeadDetail() {
   const deleteMut = useMutation({
     mutationFn: () => leadsApi.update(id, { status: 'archived' }),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Lead archived');
+      logActivity({ orgId: activeOrgId, entityType: 'lead', entityId: id, action: 'status_changed', description: `Lead ${lead?.fullName || lead?.firstName} archived`, userId: user?.id, userEmail: user?.email });
       navigate('/Leads');
     },
   });

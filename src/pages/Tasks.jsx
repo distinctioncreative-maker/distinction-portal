@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { tasksApi } from '@/api/tasks';
+import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -52,12 +53,18 @@ export default function Tasks() {
         ? tasksApi.update(editingTask.id, payload)
         : tasksApi.create(payload);
     },
-    onSuccess: () => {
+    onSuccess: (result, data) => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       setShowCreate(false);
       setEditingTask(null);
       setForm({ title: '', description: '', priority: 'medium', dueAt: '', assignedToUserId: '' });
       toast.success(editingTask ? 'Task updated' : 'Task created');
+      if (!editingTask) {
+        logActivity({ orgId: activeOrgId, entityType: 'task', entityId: result?.id, action: 'created', description: `Task "${data.title}" created`, userId: user?.id, userEmail: user?.email });
+      } else {
+        logActivity({ orgId: activeOrgId, entityType: 'task', entityId: editingTask.id, action: 'updated', description: `Task "${data.title}" updated`, userId: user?.id, userEmail: user?.email });
+      }
     },
     onError: (error) => {
       toast.error('Failed to save task');
@@ -69,17 +76,25 @@ export default function Tasks() {
     mutationFn: (task) => tasksApi.update(task.id, {
       status: task.status === 'completed' ? 'todo' : 'completed',
     }),
-    onSuccess: () => {
+    onSuccess: (_, task) => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      const wasCompleted = task.status === 'completed';
+      const action = wasCompleted ? 'updated' : 'completed';
+      const description = wasCompleted ? `Task "${task.title}" reopened` : `Task "${task.title}" marked as completed`;
       toast.success('Task updated');
+      logActivity({ orgId: activeOrgId, entityType: 'task', entityId: task.id, action, description, userId: user?.id, userEmail: user?.email });
     },
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => tasksApi.update(id, { status: 'cancelled' }),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Task cancelled');
+      const task = tasks.find(t => t.id === id);
+      if (task) logActivity({ orgId: activeOrgId, entityType: 'task', entityId: id, action: 'status_changed', description: `Task "${task.title}" cancelled`, userId: user?.id, userEmail: user?.email });
     },
   });
 

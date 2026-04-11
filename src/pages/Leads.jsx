@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { leadsApi } from '@/api/leads';
+import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import { Plus, Search, Mail, Phone, Calendar, UserPlus, Users } from 'lucide-rea
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 
 const statusColors = {
   new: 'bg-blue-500/10 text-blue-500 border-blue-500/20', contacted: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
@@ -26,6 +28,7 @@ const sourceLabels = { website: 'Website', referral: 'Referral', social_media: '
 
 export default function Leads() {
   const { activeOrgId } = useOrg();
+  const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -41,12 +44,14 @@ export default function Leads() {
 
   const createMut = useMutation({
     mutationFn: (data) => leadsApi.create({ ...data, organizationId: activeOrgId, fullName: `${data.firstName} ${data.lastName}`.trim() }),
-    onSuccess: () => {
+    onSuccess: (created, data) => {
       qc.invalidateQueries({ queryKey: ['leads'] });
       qc.invalidateQueries({ queryKey: ['activities'] });
       setShowCreate(false);
       setForm({ firstName: '', lastName: '', email: '', phone: '', source: 'website', status: 'new', valueEstimate: 0, notes: '' });
       toast.success('Lead created successfully');
+      const name = `${data.firstName} ${data.lastName}`.trim();
+      logActivity({ orgId: activeOrgId, entityType: 'lead', entityId: created?.id, action: 'created', description: `Lead ${name} created`, userId: user?.id, userEmail: user?.email });
     },
     onError: (error) => {
       toast.error('Failed to create lead');

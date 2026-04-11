@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
 import { tasksApi } from '@/api/tasks';
+import { pipelineApi } from '@/api/pipeline';
+import { activityLogApi } from '@/api/activityLog';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -35,19 +36,19 @@ export default function Dashboard() {
 
   const { data: stages } = useQuery({
     queryKey: ['stages', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.PipelineStage.filter({ organizationId: activeOrgId }) : [],
+    queryFn: () => activeOrgId ? pipelineApi.stages.list(activeOrgId) : [],
     initialData: [],
   });
 
   const { data: pipelineItems } = useQuery({
     queryKey: ['pipelineItems', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.PipelineItem.filter({ organizationId: activeOrgId }) : [],
+    queryFn: () => activeOrgId ? pipelineApi.items.list(activeOrgId) : [],
     initialData: [],
   });
 
   const { data: activities } = useQuery({
     queryKey: ['activities', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.ActivityLog.filter({ organizationId: activeOrgId }, '-created_date', 10) : [],
+    queryFn: () => activeOrgId ? activityLogApi.listForOrg(activeOrgId, 10) : [],
     initialData: [],
   });
 
