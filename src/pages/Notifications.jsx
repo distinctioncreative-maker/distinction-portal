@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { notificationsApi } from '@/api/notifications';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -29,20 +29,17 @@ export default function Notifications() {
 
   const { data: notifications } = useQuery({
     queryKey: ['notifications', user?.id],
-    queryFn: () => user?.id ? base44.entities.Notification.filter({ userId: user.id }, '-created_date', 100) : [],
+    queryFn: () => user?.id ? notificationsApi.listForUser(user.id, 100) : [],
     initialData: [],
   });
 
   const markReadMut = useMutation({
-    mutationFn: (id) => base44.entities.Notification.update(id, { status: 'read', readAt: new Date().toISOString() }),
+    mutationFn: (id) => notificationsApi.markRead(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const markAllReadMut = useMutation({
-    mutationFn: async () => {
-      const unread = notifications.filter(n => n.status === 'unread');
-      await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { status: 'read', readAt: new Date().toISOString() })));
-    },
+    mutationFn: () => notificationsApi.markAllRead(user?.id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
   });
 

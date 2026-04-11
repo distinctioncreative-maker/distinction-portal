@@ -59,3 +59,36 @@ drop table if exists client_notes;
 ```
 Run via Supabase SQL editor if needed.
 
+---
+
+### [2026-04-10] Phase 4g + 4h: Notifications + OrgSettings
+
+**Files added:**
+- `src/api/notifications.js` — listForUser, markRead, markAllRead
+- `src/api/orgSettings.js` — orgSettingsApi (get/upsert) + organizationsApi (update)
+- `supabase/migrations/20260410000003_create_notifications.sql`
+- `supabase/migrations/20260410000004_orgsettings.sql`
+
+**Files modified:**
+- `src/pages/Notifications.jsx` — replaced all base44 calls with notificationsApi
+- `src/pages/OrgSettings.jsx` — replaced base44 Organization + OrganizationSetting calls with orgSettingsApi/organizationsApi
+
+**Supabase changes (IRREVERSIBLE without migration):**
+- `notifications` table created
+- `organization_settings` table created
+- `organizations` table: added columns `business_type`, `timezone`, `primary_color`
+
+**To roll back this commit:**
+```bash
+git revert HEAD
+git push origin main
+```
+**To drop tables (destructive):**
+```sql
+drop table if exists notifications;
+drop table if exists organization_settings;
+alter table organizations drop column if exists business_type;
+alter table organizations drop column if exists timezone;
+alter table organizations drop column if exists primary_color;
+```
+

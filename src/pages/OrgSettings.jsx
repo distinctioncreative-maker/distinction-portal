@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { orgSettingsApi, organizationsApi } from '@/api/orgSettings';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,11 +18,8 @@ export default function OrgSettings() {
 
   const { data: settings } = useQuery({
     queryKey: ['orgSettings', activeOrgId],
-    queryFn: async () => {
-      if (!activeOrgId) return null;
-      const s = await base44.entities.OrganizationSetting.filter({ organizationId: activeOrgId });
-      return s[0] || null;
-    },
+    queryFn: () => activeOrgId ? orgSettingsApi.get(activeOrgId) : null,
+    enabled: !!activeOrgId,
   });
 
   useEffect(() => {
@@ -39,17 +36,14 @@ export default function OrgSettings() {
   const saveOrgMut = useMutation({
     mutationFn: () => {
       if (!organization?.id) throw new Error('No organization found');
-      return base44.entities.Organization.update(organization.id, orgForm);
+      return organizationsApi.update(organization.id, orgForm);
     },
-    onSuccess: (data) => { setOrganization({ ...organization, ...orgForm }); toast.success('Organization updated'); },
+    onSuccess: () => { setOrganization({ ...organization, ...orgForm }); toast.success('Organization updated'); },
     onError: (error) => { toast.error('Failed to update organization'); console.error(error); },
   });
 
   const toggleMut = useMutation({
-    mutationFn: ({ key, value }) => {
-      if (settings) return base44.entities.OrganizationSetting.update(settings.id, { [key]: value });
-      return base44.entities.OrganizationSetting.create({ organizationId: activeOrgId, [key]: value });
-    },
+    mutationFn: ({ key, value }) => orgSettingsApi.upsert(activeOrgId, { [key]: value }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['orgSettings'] }),
   });
 
