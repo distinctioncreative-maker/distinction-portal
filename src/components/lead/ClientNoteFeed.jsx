@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { clientNotesApi } from '@/api/clientNotes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import { useOrg } from '@/components/OrgContext';
@@ -34,12 +34,12 @@ export default function ClientNoteFeed({ leadId }) {
 
   const { data: notes } = useQuery({
     queryKey: ['clientNotes', leadId],
-    queryFn: () => base44.entities.ClientNote.filter({ leadId, organizationId: activeOrgId }, '-created_date'),
+    queryFn: () => activeOrgId ? clientNotesApi.listForLead(leadId, activeOrgId) : [],
     initialData: [],
   });
 
   const createNoteMut = useMutation({
-    mutationFn: (data) => base44.entities.ClientNote.create(data),
+    mutationFn: (data) => clientNotesApi.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clientNotes', leadId] });
       setNewNote('');

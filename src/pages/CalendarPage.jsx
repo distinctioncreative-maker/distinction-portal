@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { appointmentsApi } from '@/api/appointments';
+import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -36,7 +37,7 @@ export default function CalendarPage() {
 
   const { data: appointments } = useQuery({
     queryKey: ['appointments', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Appointment.filter({ organizationId: activeOrgId }, '-startAt', 200) : [],
+    queryFn: () => activeOrgId ? appointmentsApi.list(activeOrgId, 200) : [],
     initialData: [],
   });
 
@@ -51,15 +52,21 @@ export default function CalendarPage() {
         endAt: data.endAt ? new Date(data.endAt).toISOString() : null,
       };
       return editingAppt
-        ? base44.entities.Appointment.update(editingAppt.id, payload)
-        : base44.entities.Appointment.create(payload);
+        ? appointmentsApi.update(editingAppt.id, payload)
+        : appointmentsApi.create(payload);
     },
-    onSuccess: () => {
+    onSuccess: (result, data) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       setShowCreate(false);
       setEditingAppt(null);
       setForm({ title: '', type: 'call', startAt: '', endAt: '', location: '', description: '' });
       toast.success(editingAppt ? 'Appointment updated' : 'Appointment created');
+      if (!editingAppt) {
+        logActivity({ orgId: activeOrgId, entityType: 'appointment', entityId: result?.id, action: 'created', description: `Appointment "${data.title}" scheduled`, userId: user?.id, userEmail: user?.email });
+      } else {
+        logActivity({ orgId: activeOrgId, entityType: 'appointment', entityId: editingAppt.id, action: 'updated', description: `Appointment "${data.title}" updated`, userId: user?.id, userEmail: user?.email });
+      }
     },
     onError: (error) => {
       toast.error('Failed to save appointment');
@@ -68,10 +75,13 @@ export default function CalendarPage() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.Appointment.update(id, { status: 'cancelled' }),
-    onSuccess: () => {
+    mutationFn: (id) => appointmentsApi.update(id, { status: 'cancelled' }),
+    onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Appointment cancelled');
+      const appt = appointments.find(a => a.id === id);
+      if (appt) logActivity({ orgId: activeOrgId, entityType: 'appointment', entityId: id, action: 'status_changed', description: `Appointment "${appt.title}" cancelled`, userId: user?.id, userEmail: user?.email });
     },
   });
 

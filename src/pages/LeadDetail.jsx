@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { leadsApi } from '@/api/leads';
 import { tasksApi } from '@/api/tasks';
+import { appointmentsApi } from '@/api/appointments';
 import { activityLogApi } from '@/api/activityLog';
 import { logActivity } from '@/lib/logActivity';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -55,8 +56,9 @@ export default function LeadDetail() {
   });
 
   const { data: appointments } = useQuery({
-    queryKey: ['leadAppointments', id],
-    queryFn: () => [],
+    queryKey: ['leadAppointments', id, activeOrgId],
+    queryFn: () => activeOrgId ? appointmentsApi.listForLead(id, activeOrgId) : [],
+    enabled: !!activeOrgId,
     initialData: [],
   });
 
