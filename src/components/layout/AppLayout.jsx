@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OrgInitializer from '../OrgInitializer';
+import AiAssistant from './AiAssistant';
 
 export default function AppLayout() {
   return (
@@ -16,6 +17,7 @@ export default function AppLayout() {
           </div>
         </main>
       </div>
+      <AiAssistant />
     </>
   );
 }

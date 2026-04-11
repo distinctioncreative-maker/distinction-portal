@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 export default function InitDemo() {
@@ -8,14 +8,19 @@ export default function InitDemo() {
   useEffect(() => {
     async function init() {
       try {
-        await base44.auth.updateMe({
-          organizationId: '69b2f6b90317a99f9510341c',
-          role: 'owner',
-          isActive: true
+        // Fetch the first available org to assign the demo user to
+        const { data: orgs } = await supabase.from('organizations').select('id').limit(1);
+        const orgId = orgs?.[0]?.id;
+        if (!orgId) throw new Error('No organizations found');
+
+        await supabase.auth.updateUser({
+          data: { organizationId: orgId, role: 'owner', isActive: true },
         });
-        window.location.href = '/Dashboard';
+
+        navigate('/Dashboard', { replace: true });
       } catch (err) {
         console.error('Init failed:', err);
+        navigate('/Dashboard', { replace: true });
       }
     }
     init();
