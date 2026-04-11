@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+import { supportSessionsApi } from '@/api/supportSessions';
 
 const OrgContext = createContext(null);
 
@@ -50,14 +51,21 @@ export function OrgProvider({ children }) {
   const userRole = user?.role || 'user';
   const isInternal = userRole === 'superadmin' || userRole === 'support';
 
-  // Phase 4: wire to real SupportSession table once entity API is live.
   const enterSupportMode = async (orgId, orgName, reason) => {
-    const fakeSession = { id: `support-${Date.now()}` };
-    setSupportMode({ sessionId: fakeSession.id, orgId, orgName, reason });
-    return fakeSession;
+    const session = await supportSessionsApi.create({
+      supportUserId: user.id,
+      organizationId: orgId,
+      reason,
+      mode: 'read',
+    });
+    setSupportMode({ sessionId: session.id, orgId, orgName, reason });
+    return session;
   };
 
   const exitSupportMode = async () => {
+    if (supportMode?.sessionId) {
+      supportSessionsApi.end(supportMode.sessionId).catch(console.warn);
+    }
     setSupportMode(null);
   };
 

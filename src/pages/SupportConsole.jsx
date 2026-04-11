@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { organizationsApi } from '@/api/orgSettings';
+import { supportSessionsApi } from '@/api/supportSessions';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Shield, Search, Building2, Users, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Shield, Search, Building2, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function SupportConsole() {
@@ -22,7 +23,6 @@ export default function SupportConsole() {
   const [reason, setReason] = useState('');
   const [showEnter, setShowEnter] = useState(false);
 
-  // Guard: only support/superadmin
   if (!['support', 'superadmin'].includes(userRole)) {
     return (
       <div className="p-6 max-w-3xl mx-auto text-center py-20">
@@ -35,13 +35,14 @@ export default function SupportConsole() {
 
   const { data: orgs } = useQuery({
     queryKey: ['allOrgs'],
-    queryFn: () => base44.entities.Organization.list('-created_date', 200),
+    queryFn: () => organizationsApi.listAll(200),
     initialData: [],
   });
 
   const { data: recentSessions } = useQuery({
     queryKey: ['recentSupportSessions', user?.id],
-    queryFn: () => user?.id ? base44.entities.SupportSession.filter({ supportUserId: user.id }, '-created_date', 10) : [],
+    queryFn: () => user?.id ? supportSessionsApi.listForUser(user.id, 10) : [],
+    enabled: !!user?.id,
     initialData: [],
   });
 
@@ -62,7 +63,6 @@ export default function SupportConsole() {
         <p className="text-sm text-muted-foreground mt-1">Access client organizations for troubleshooting</p>
       </div>
 
-      {/* Current Support Mode */}
       {isSupportMode && (
         <Card className="border-amber-500/20 bg-amber-500/5">
           <CardContent className="p-4 flex items-center justify-between">
@@ -78,7 +78,6 @@ export default function SupportConsole() {
         </Card>
       )}
 
-      {/* Warning */}
       <Card className="border-amber-500/20 bg-amber-500/5 p-4">
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
@@ -89,10 +88,9 @@ export default function SupportConsole() {
         </div>
       </Card>
 
-      {/* Search Organizations */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Organizations</CardTitle>
+          <CardTitle className="text-base">Organizations ({orgs.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
@@ -112,20 +110,18 @@ export default function SupportConsole() {
                     </div>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => { setSelectedOrg(org); setShowEnter(true); }}
-                >
+                <Button size="sm" variant="outline" onClick={() => { setSelectedOrg(org); setShowEnter(true); }}>
                   Enter <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
             ))}
+            {filtered.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-6">No organizations found</p>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Sessions */}
       <Card>
         <CardHeader><CardTitle className="text-base">Recent Support Sessions</CardTitle></CardHeader>
         <CardContent>
@@ -136,8 +132,8 @@ export default function SupportConsole() {
               {recentSessions.map(s => (
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
-                    <p className="text-xs font-medium">Org: {s.organizationId}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.accessReason}</p>
+                    <p className="text-xs font-medium">{s.reason || 'No reason provided'}</p>
+                    <p className="text-[10px] text-muted-foreground">Org: {s.organizationId}</p>
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${s.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : ''}`}>{s.status}</Badge>
                 </div>
@@ -147,7 +143,6 @@ export default function SupportConsole() {
         </CardContent>
       </Card>
 
-      {/* Enter Support Mode Dialog */}
       <Dialog open={showEnter} onOpenChange={setShowEnter}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Enter Support Mode</DialogTitle></DialogHeader>
@@ -158,12 +153,7 @@ export default function SupportConsole() {
             </div>
             <div>
               <Label className="text-xs">Reason for Access *</Label>
-              <Textarea
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                placeholder="Describe the support reason..."
-                rows={3}
-              />
+              <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Describe the support reason..." rows={3} />
               <p className="text-[10px] text-muted-foreground mt-1">This will be logged in the audit trail</p>
             </div>
             <Button onClick={handleEnterSupport} disabled={!reason.trim()} className="w-full">

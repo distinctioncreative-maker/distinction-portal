@@ -1,11 +1,11 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { supportSessionsApi } from '@/api/supportSessions';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, FileText } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function SupportLogs() {
@@ -22,13 +22,7 @@ export default function SupportLogs() {
 
   const { data: sessions } = useQuery({
     queryKey: ['allSupportSessions'],
-    queryFn: () => base44.entities.SupportSession.list('-created_date', 100),
-    initialData: [],
-  });
-
-  const { data: actionLogs } = useQuery({
-    queryKey: ['allSupportActionLogs'],
-    queryFn: () => base44.entities.SupportActionLog.list('-created_date', 100),
+    queryFn: () => supportSessionsApi.list(100),
     initialData: [],
   });
 
@@ -39,9 +33,8 @@ export default function SupportLogs() {
         <p className="text-sm text-muted-foreground mt-1">Audit trail of all support access</p>
       </div>
 
-      {/* Sessions */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Sessions</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Sessions ({sessions.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -51,8 +44,8 @@ export default function SupportLogs() {
                 <TableHead className="font-semibold">Reason</TableHead>
                 <TableHead className="font-semibold">Mode</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold">Entered</TableHead>
-                <TableHead className="font-semibold">Exited</TableHead>
+                <TableHead className="font-semibold">Started</TableHead>
+                <TableHead className="font-semibold">Ended</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -60,44 +53,15 @@ export default function SupportLogs() {
                 <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">No sessions found</TableCell></TableRow>
               ) : sessions.map(s => (
                 <TableRow key={s.id}>
-                  <TableCell className="text-xs">{s.supportUserId || '—'}</TableCell>
-                  <TableCell className="text-xs">{s.organizationId || '—'}</TableCell>
-                  <TableCell className="text-xs max-w-48 truncate">{s.accessReason}</TableCell>
+                  <TableCell className="text-xs font-mono">{s.supportUserId?.slice(0, 8)}…</TableCell>
+                  <TableCell className="text-xs font-mono">{s.organizationId?.slice(0, 8)}…</TableCell>
+                  <TableCell className="text-xs max-w-48 truncate">{s.reason || '—'}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{s.mode}</Badge></TableCell>
                   <TableCell>
                     <Badge className={`text-[10px] ${s.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : s.status === 'ended' ? 'bg-muted text-muted-foreground' : 'bg-amber-500/10 text-amber-500'}`}>{s.status}</Badge>
                   </TableCell>
-                  <TableCell className="text-xs">{s.enteredAt ? format(new Date(s.enteredAt), 'MMM d, h:mm a') : '—'}</TableCell>
-                  <TableCell className="text-xs">{s.exitedAt ? format(new Date(s.exitedAt), 'MMM d, h:mm a') : '—'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Action Logs */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">Action Logs</CardTitle></CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="font-semibold">Action</TableHead>
-                <TableHead className="font-semibold">Entity</TableHead>
-                <TableHead className="font-semibold">Description</TableHead>
-                <TableHead className="font-semibold">Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {actionLogs.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">No action logs</TableCell></TableRow>
-              ) : actionLogs.map(l => (
-                <TableRow key={l.id}>
-                  <TableCell><Badge variant="outline" className="text-[10px]">{l.actionType}</Badge></TableCell>
-                  <TableCell className="text-xs">{l.entityType || '—'}</TableCell>
-                  <TableCell className="text-xs max-w-64 truncate">{l.description || '—'}</TableCell>
-                  <TableCell className="text-xs">{l.created_date ? format(new Date(l.created_date), 'MMM d, h:mm a') : '—'}</TableCell>
+                  <TableCell className="text-xs">{s.startedAt ? format(new Date(s.startedAt), 'MMM d, h:mm a') : '—'}</TableCell>
+                  <TableCell className="text-xs">{s.endedAt ? format(new Date(s.endedAt), 'MMM d, h:mm a') : '—'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

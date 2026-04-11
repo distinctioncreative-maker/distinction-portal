@@ -52,7 +52,52 @@ export const orgSettingsApi = {
   },
 };
 
+function orgFromDb(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    status: row.status,
+    isActive: row.is_active,
+    planType: row.plan_type,
+    businessType: row.business_type,
+    timezone: row.timezone,
+    createdDate: row.created_at || row.created_date,
+  };
+}
+
 export const organizationsApi = {
+  listAll: async (limit = 200) => {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data || []).map(orgFromDb);
+  },
+
+  create: async ({ name, businessType, planType }) => {
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    const { data, error } = await supabase
+      .from('organizations')
+      .insert({ name, slug, business_type: businessType, plan_type: planType, status: 'trial', is_active: true })
+      .select()
+      .single();
+    if (error) throw error;
+    return orgFromDb(data);
+  },
+
+  toggleStatus: async (org) => {
+    const newActive = !org.isActive;
+    const { error } = await supabase
+      .from('organizations')
+      .update({ is_active: newActive, status: newActive ? 'active' : 'inactive' })
+      .eq('id', org.id);
+    if (error) throw error;
+  },
+
   update: async (orgId, data) => {
     const fieldMap = {
       name: 'name',

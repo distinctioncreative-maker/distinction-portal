@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { organizationsApi } from '@/api/orgSettings';
+import { supportSessionsApi } from '@/api/supportSessions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Shield, Building2, Plus, Search, Users } from 'lucide-react';
+import { Shield, Building2, Plus, Search } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function OrgManagement() {
@@ -33,23 +34,23 @@ export default function OrgManagement() {
 
   const { data: orgs } = useQuery({
     queryKey: ['allOrgs'],
-    queryFn: () => base44.entities.Organization.list('-created_date', 200),
+    queryFn: () => organizationsApi.listAll(200),
     initialData: [],
   });
 
   const { data: sessions } = useQuery({
     queryKey: ['allSupportSessions'],
-    queryFn: () => base44.entities.SupportSession.list('-created_date', 50),
+    queryFn: () => supportSessionsApi.list(50),
     initialData: [],
   });
 
   const createMut = useMutation({
-    mutationFn: (data) => base44.entities.Organization.create({ ...data, status: 'trial', isActive: true, slug: data.name.toLowerCase().replace(/\s+/g, '-') }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['allOrgs'] }); setShowCreate(false); },
+    mutationFn: (data) => organizationsApi.create(data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['allOrgs'] }); setShowCreate(false); setForm({ name: '', businessType: 'services', planType: 'starter' }); },
   });
 
   const toggleMut = useMutation({
-    mutationFn: (org) => base44.entities.Organization.update(org.id, { isActive: !org.isActive, status: org.isActive ? 'inactive' : 'active' }),
+    mutationFn: (org) => organizationsApi.toggleStatus(org),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['allOrgs'] }),
   });
 
@@ -65,7 +66,6 @@ export default function OrgManagement() {
         <Button onClick={() => setShowCreate(true)} size="sm"><Plus className="w-4 h-4 mr-1.5" /> New Organization</Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Total Orgs</p><p className="text-2xl font-bold mt-1">{orgs.length}</p></Card>
         <Card className="p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Active</p><p className="text-2xl font-bold mt-1">{orgs.filter(o => o.isActive).length}</p></Card>
@@ -99,7 +99,9 @@ export default function OrgManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map(org => (
+                  {filtered.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-sm">No organizations found</TableCell></TableRow>
+                  ) : filtered.map(org => (
                     <TableRow key={org.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -116,7 +118,7 @@ export default function OrgManagement() {
                           {org.status || (org.isActive ? 'active' : 'inactive')}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs">{org.created_date ? format(new Date(org.created_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell className="text-xs">{org.createdDate ? format(new Date(org.createdDate), 'MMM d, yyyy') : '—'}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm" onClick={() => toggleMut.mutate(org)} className="text-xs">
                           {org.isActive ? 'Deactivate' : 'Activate'}
@@ -136,7 +138,7 @@ export default function OrgManagement() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">Session</TableHead>
+                    <TableHead className="font-semibold">Org ID</TableHead>
                     <TableHead className="font-semibold">Reason</TableHead>
                     <TableHead className="font-semibold">Mode</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
@@ -144,13 +146,15 @@ export default function OrgManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sessions.map(s => (
+                  {sessions.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-sm">No sessions yet</TableCell></TableRow>
+                  ) : sessions.map(s => (
                     <TableRow key={s.id}>
-                      <TableCell className="text-xs">{s.organizationId}</TableCell>
-                      <TableCell className="text-xs max-w-48 truncate">{s.accessReason}</TableCell>
+                      <TableCell className="text-xs font-mono">{s.organizationId?.slice(0, 8)}…</TableCell>
+                      <TableCell className="text-xs max-w-48 truncate">{s.reason || '—'}</TableCell>
                       <TableCell><Badge variant="outline" className="text-[10px]">{s.mode}</Badge></TableCell>
                       <TableCell><Badge className={`text-[10px] ${s.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>{s.status}</Badge></TableCell>
-                      <TableCell className="text-xs">{s.created_date ? format(new Date(s.created_date), 'MMM d, h:mm a') : '—'}</TableCell>
+                      <TableCell className="text-xs">{s.createdDate ? format(new Date(s.createdDate), 'MMM d, h:mm a') : '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -160,7 +164,6 @@ export default function OrgManagement() {
         </TabsContent>
       </Tabs>
 
-      {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>New Organization</DialogTitle></DialogHeader>
