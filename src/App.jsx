@@ -29,6 +29,7 @@ import WidgetPreferences from '@/pages/WidgetPreferences';
 import InitDemo from '@/pages/InitDemo';
 import Login from '@/pages/Login';
 import Financials from '@/pages/Financials';
+import Integrations from '@/pages/Integrations';
 import Metrics from '@/pages/Metrics';
 import TaskDetail from '@/pages/TaskDetail';
 
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
           <Route path="/Notifications" element={<Notifications />} />
           <Route path="/Profile" element={<Profile />} />
           <Route path="/OrgSettings" element={<OrgSettings />} />
+          <Route path="/Integrations" element={<Integrations />} />
           <Route path="/Billing" element={<Billing />} />
           <Route path="/SupportConsole" element={<SupportConsole />} />
           <Route path="/SupportLogs" element={<SupportLogs />} />

@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare, Calendar, Activity,
   Settings, ChevronLeft, ChevronRight, Shield, HelpCircle, DollarSign,
-  TrendingUp, Bell, LogOut, User, X, Hexagon
+  TrendingUp, Bell, LogOut, User, X, Hexagon, Plug
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -42,6 +42,7 @@ const navGroups = [
     label: 'Management',
     items: [
       { label: 'Settings', icon: Settings, path: '/OrgSettings' },
+      { label: 'Integrations', icon: Plug, path: '/Integrations' },
     ],
   },
   {
