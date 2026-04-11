@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Loader2, AlertCircle, Zap } from 'lucide-react';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -25,54 +29,100 @@ export default function Login() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm px-6">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Distinction OS</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
+    <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,185,80,0.12),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.08),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,185,80,0.03),transparent_70%)]" />
+
+      {/* Subtle grid texture */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+
+      <div className="relative w-full max-w-md px-6">
+        {/* Brand mark */}
+        <div className="mb-10 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/30 shadow-2xl shadow-accent/20 mb-6">
+            <Zap className="w-7 h-7 text-accent" />
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
+            Distinction OS
+          </h1>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border/50" />
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground/70 font-semibold">
+              Business Operating System
+            </p>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border/50" />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
+        {/* Card */}
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 via-accent/5 to-violet-500/10 rounded-3xl blur-xl opacity-60" />
+          <div className="relative p-8 rounded-2xl border border-border/50 bg-gradient-to-br from-card/90 via-card/70 to-card/50 backdrop-blur-2xl shadow-2xl">
+
+            <div className="mb-6">
+              <h2 className="text-lg font-bold">Welcome back</h2>
+              <p className="text-sm text-muted-foreground/80 mt-1">Sign in to your account to continue</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Email Address
+                </Label>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="h-12 rounded-xl bg-background/50 border-border/60 focus-visible:ring-accent/40 focus-visible:border-accent/60 text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Password
+                </Label>
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••"
+                  className="h-12 rounded-xl bg-background/50 border-border/60 focus-visible:ring-accent/40 focus-visible:border-accent/60 text-sm"
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20">
+                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-accent/20 hover:shadow-2xl hover:shadow-accent/30 transition-all duration-300 mt-2"
+              >
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in…</>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium">Password</label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+        {/* Footer */}
+        <p className="text-center text-[11px] text-muted-foreground/40 mt-8 tracking-wide">
+          Secured by Supabase · Distinction Creative © 2026
+        </p>
       </div>
     </div>
   );

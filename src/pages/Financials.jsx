@@ -1,19 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { dailyMetricsApi } from '@/api/dailyMetrics';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingUp, TrendingDown, PiggyBank, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DollarSign, TrendingUp, PiggyBank, Target, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+
+const today = new Date().toISOString().split('T')[0];
+
+const defaultEntry = {
+  date: today,
+  revenueDaily: '', profitDaily: '',
+  leadsDaily: '', bookedCallsDaily: '',
+  revenueMTD: '', profitMTD: '', revenueYTD: '', profitYTD: '',
+  leadsMTD: '', leadsYTD: '', bookedCallsMTD: '', bookedCallsYTD: '',
+  conversionRateDaily: '',
+};
 
 export default function Financials() {
   const { activeOrgId } = useOrg();
+  const qc = useQueryClient();
+  const [showEntry, setShowEntry] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [entry, setEntry] = useState(defaultEntry);
 
   const { data: metrics } = useQuery({
     queryKey: ['dailyMetrics', activeOrgId],
     queryFn: () => activeOrgId ? dailyMetricsApi.list(activeOrgId, 90) : [],
     initialData: [],
+  });
+
+  const logMut = useMutation({
+    mutationFn: () => {
+      const nums = {};
+      for (const [k, v] of Object.entries(entry)) {
+        if (k === 'date') continue;
+        nums[k] = v === '' ? 0 : Number(v);
+      }
+      return dailyMetricsApi.upsert(activeOrgId, entry.date, nums);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dailyMetrics'] });
+      qc.invalidateQueries({ queryKey: ['metrics'] });
+      setShowEntry(false);
+      setEntry(defaultEntry);
+      setShowAdvanced(false);
+      toast.success('Metrics logged');
+    },
+    onError: (e) => { toast.error('Failed to save metrics'); console.error(e); },
   });
 
   const latestMetric = metrics[0] || {};
@@ -28,6 +68,19 @@ export default function Financials() {
   const monthlyRevenue = latestMetric.revenueMTD || 0;
   const monthlyProfit = latestMetric.profitMTD || 0;
   const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0;
+
+  const field = (key, label, type = 'number', placeholder = '0') => (
+    <div>
+      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">{label}</Label>
+      <Input
+        type={type}
+        value={entry[key]}
+        onChange={e => setEntry({ ...entry, [key]: e.target.value })}
+        placeholder={placeholder}
+        className="h-11 rounded-xl"
+      />
+    </div>
+  );
 
   return (
     <div className="min-h-screen">
@@ -48,6 +101,13 @@ export default function Financials() {
                 </div>
               </div>
             </div>
+            <Button
+              onClick={() => setShowEntry(true)}
+              size="lg"
+              className="rounded-xl px-6 shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300"
+            >
+              <Plus className="w-5 h-5 mr-2" /> Log Today's Numbers
+            </Button>
           </div>
         </div>
       </div>
@@ -104,7 +164,7 @@ export default function Financials() {
           <Card className="p-6 border-border/50 bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-xl hover:shadow-2xl hover:shadow-accent/5 transition-all duration-300">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70">Daily Avg Revenue</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70">Daily Revenue</p>
                 <p className="text-3xl font-bold tracking-tight mt-2">${((latestMetric.revenueDaily || 0) / 1000).toFixed(1)}k</p>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
@@ -134,10 +194,7 @@ export default function Financials() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} labelStyle={{ color: 'hsl(var(--foreground))' }} />
                   <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -155,10 +212,7 @@ export default function Financials() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} labelStyle={{ color: 'hsl(var(--foreground))' }} />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
                   <Bar dataKey="revenue" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
                   <Bar dataKey="profit" fill="hsl(var(--chart-2))" radius={[8, 8, 0, 0]} />
@@ -168,6 +222,62 @@ export default function Financials() {
           </Card>
         </div>
       </div>
+
+      {/* Log Metrics Dialog */}
+      <Dialog open={showEntry} onOpenChange={(open) => { setShowEntry(open); if (!open) { setEntry(defaultEntry); setShowAdvanced(false); } }}>
+        <DialogContent className="max-w-lg border-border/50 bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Log Today's Numbers</DialogTitle>
+            <p className="text-sm text-muted-foreground/80 mt-1">Enter your daily performance metrics</p>
+          </DialogHeader>
+          <div className="space-y-5 mt-4">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">Date</Label>
+              <Input type="date" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} className="h-11 rounded-xl" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {field('revenueDaily', 'Revenue Today ($)')}
+              {field('profitDaily', 'Profit Today ($)')}
+              {field('leadsDaily', 'New Leads')}
+              {field('bookedCallsDaily', 'Booked Calls')}
+              {field('conversionRateDaily', 'Conversion Rate (%)')}
+            </div>
+
+            {/* Advanced toggle */}
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(v => !v)}
+              className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-foreground transition-colors"
+            >
+              {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              {showAdvanced ? 'Hide' : 'Show'} MTD / YTD fields
+            </button>
+
+            {showAdvanced && (
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/30">
+                {field('revenueMTD', 'Revenue MTD ($)')}
+                {field('profitMTD', 'Profit MTD ($)')}
+                {field('revenueYTD', 'Revenue YTD ($)')}
+                {field('profitYTD', 'Profit YTD ($)')}
+                {field('leadsMTD', 'Leads MTD')}
+                {field('leadsYTD', 'Leads YTD')}
+                {field('bookedCallsMTD', 'Calls MTD')}
+                {field('bookedCallsYTD', 'Calls YTD')}
+              </div>
+            )}
+
+            <Button
+              onClick={() => logMut.mutate()}
+              disabled={logMut.isPending || !activeOrgId}
+              className="w-full h-12 rounded-xl text-base font-semibold shadow-lg hover:shadow-2xl hover:shadow-accent/10 transition-all duration-300"
+            >
+              <DollarSign className="w-5 h-5 mr-2" />
+              {logMut.isPending ? 'Saving...' : 'Save Metrics'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
