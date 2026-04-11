@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { tasksApi } from '@/api/tasks';
 import { pipelineApi } from '@/api/pipeline';
 import { activityLogApi } from '@/api/activityLog';
+import { dailyMetricsApi } from '@/api/dailyMetrics';
+import { leadsApi } from '@/api/leads';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -18,13 +20,13 @@ export default function Dashboard() {
 
   const { data: metrics } = useQuery({
     queryKey: ['metrics', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.DailyMetric.filter({ organizationId: activeOrgId }, '-date', 30) : [],
+    queryFn: () => activeOrgId ? dailyMetricsApi.list(activeOrgId, 30) : [],
     initialData: [],
   });
 
   const { data: leads } = useQuery({
     queryKey: ['leads', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.Lead.filter({ organizationId: activeOrgId }, '-created_date', 50) : [],
+    queryFn: () => activeOrgId ? leadsApi.list(activeOrgId) : [],
     initialData: [],
   });
 

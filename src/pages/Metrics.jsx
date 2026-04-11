@@ -1,5 +1,5 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
+import { dailyMetricsApi } from '@/api/dailyMetrics';
 import { useQuery } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ export default function Metrics() {
 
   const { data: metrics } = useQuery({
     queryKey: ['dailyMetrics', activeOrgId],
-    queryFn: () => activeOrgId ? base44.entities.DailyMetric.filter({ organizationId: activeOrgId }, '-date', 90) : [],
+    queryFn: () => activeOrgId ? dailyMetricsApi.list(activeOrgId, 90) : [],
     initialData: [],
   });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { widgetSettingsApi } from '@/api/widgetSettings';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrg } from '@/components/OrgContext';
 import { useAuth } from '@/lib/AuthContext';
@@ -25,17 +25,13 @@ export default function WidgetPreferences() {
 
   const { data: widgetSettings } = useQuery({
     queryKey: ['widgetSettings', activeOrgId, user?.id],
-    queryFn: () => activeOrgId && user?.id ? base44.entities.WidgetSetting.filter({ organizationId: activeOrgId, userId: user.id }) : [],
+    queryFn: () => activeOrgId && user?.id ? widgetSettingsApi.list(activeOrgId, user.id) : [],
     initialData: [],
   });
 
   const toggleMut = useMutation({
     mutationFn: async ({ widgetKey, isVisible }) => {
-      const existing = widgetSettings.find(w => w.widgetKey === widgetKey);
-      if (existing) {
-        return base44.entities.WidgetSetting.update(existing.id, { isVisible });
-      }
-      return base44.entities.WidgetSetting.create({ organizationId: activeOrgId, userId: user?.id, widgetKey, isVisible });
+      return widgetSettingsApi.upsert(activeOrgId, user?.id, widgetKey, isVisible);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['widgetSettings'] }),
   });
